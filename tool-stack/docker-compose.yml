@@ -1,15 +1,17 @@
 services:
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    command: certonly --standalone --email ${DOMAIN_EMAIL} --agree-tos --no-eff-email -d ${DUCKDNS_DOMAIN}
+  caddy:
+    image: caddy:latest
+    container_name: reverse-proxy-caddy
     volumes:
-      - ./config/letsencrypt:/etc/letsencrypt
-      - ./config/certbot:/var/lib/letsencrypt
-    networks:
-      - hass-network
+      - ./config/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./config/caddy/data:/data
+      - ./config/caddy/config:/config
+    restart: unless-stopped
     ports:
       - 80:80
+      - "443:443"
+    networks:
+      - hass-network
 
   deconz:
     image: deconzcommunity/deconz:stable

@@ -1,12 +1,12 @@
 # Tool Stack Docker Compose
 
-This directory contains a `docker-compose.yml` file that defines a Docker-based tool stack for SSL certificate management, Zigbee integration, MQTT messaging, and backups.
+This directory contains a `docker-compose.yml` file that defines a Docker-based tool stack for reverse proxy, SSL, Zigbee integration, MQTT messaging, and backups.
 
 ## Overview
 
 The `docker-compose.yml` file sets up the following services:
 
-- **certbot**: SSL certificate manager using Certbot for obtaining and renewing Let's Encrypt certificates.
+- **reverse-proxy-caddy**: A reverse proxy and SSL certificate manager using Caddy for handling HTTPS and routing.
 - **deconz**: A Zigbee gateway for smart home devices, providing web interface and API access.
 - **mosquitto**: An MQTT broker for lightweight messaging between IoT devices.
 - **duplicati**: A backup solution for encrypting and storing data remotely.
@@ -27,7 +27,7 @@ The following environment variables are required and should be defined in a `.en
 - **PGID**: Group ID for file permissions (e.g., 1000).
 - **DUPLICATI_ENCRYPTION_KEY**: Encryption key for Duplicati backups.
 - **DUPLICATI_WEBSERVICE_PASSWORD**: Password for Duplicati web interface.
-- **DOMAIN_EMAIL**: Email for SSL certificate notifications (used by Certbot).
+- **DOMAIN_EMAIL**: Email for SSL certificate notifications (used by Caddy).
 - **DUCKDNS_DOMAIN**: Your DuckDNS domain for SSL (e.g., yourdomain.duckdns.org).
 
 Example `.env` file content:
@@ -47,25 +47,25 @@ DUCKDNS_DOMAIN=yourdomain.duckdns.org
 1. Navigate to this directory: `cd <hass-dockered>/tool-stack`
 2. Start the stack using the `.env` file from the parent folder: `docker-compose --env-file ../.env up -d`
 3. Access services:
+   - Caddy (reverse proxy): `https://localhost` (or your domain)
    - deCONZ: `http://localhost:8080`
    - Mosquitto: Ports 1883 (MQTT) and 9001 (WebSocket)
    - Duplicati: `http://localhost:8200`
-   - Certbot: Runs in the background to obtain certificates; no direct web access.
 4. Stop the stack: `docker-compose down`
 
 ## Configuration
 
-- **certbot**: Configured via command-line arguments; certificates stored in `./config/letsencrypt` and `./config/certbot`; uses standalone mode for domain validation.
+- **reverse-proxy-caddy**: Configured via `./config/caddy/Caddyfile`; handles SSL certificates automatically; data and config persist in volumes.
 - **deconz**: Uses host networking; Zigbee device mapped to `/dev/ttyUSB0`; config stored in `./config/deconz`.
 - **mosquitto**: Uses host networking; config, data, and logs in `./config/mosquitto`.
 - **duplicati**: Config in `./config/duplicati`; backs up `./config/hass_config`; uses host networking.
-- Networks: Uses `hass-network` for Certbot.
+- Networks: Uses `docker-network` for Caddy and `hass-network` as an alternative.
 
 ## Troubleshooting
 
 - Check logs: `docker-compose logs [service_name]`
-- Ensure environment variables are set correctly for Certbot and Duplicati.
-- For Certbot SSL issues, verify domain ownership and email; certificates are renewed automatically if the container runs periodically.
+- Ensure environment variables are set correctly.
 - For deCONZ, verify Zigbee USB device access and permissions.
+- For Caddy SSL issues, check domain configuration and email for Let's Encrypt.
 - For Mosquitto, ensure ports are not conflicting and ACLs are configured if needed.
 - For Duplicati, verify encryption key and backup destinations.
