@@ -25,8 +25,6 @@ services:
   homeassistant:
     container_name: homeassistant
     image: homeassistant/home-assistant:stable
-    depends_on:
-      - core-mariadb
     profiles:
       - basic
       - extra
@@ -35,8 +33,7 @@ services:
       - TZ=${TZ}
     volumes:
       - ./config/hass_config:/config
-      - ./config/letsencrypt:/etc/letsencrypt:ro
-      - ./config/certbot:/var/lib/letsencrypt:ro
+      - ../tool-stack/config/letsencrypt:/etc/letsencrypt:ro
     restart: unless-stopped
     network_mode: host
     # Uncomment below to use bridge networking instead of host

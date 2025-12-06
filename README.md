@@ -1,12 +1,12 @@
 # Hass-Dockered
 
-This repository contains Docker Compose configurations for a Home Assistant setup, organized into stacks: `hass` (Home Assistant core), `tool` (tools like Certbot, Deconz, Mosquitto, Duplicati), and `sys` (system services like Portainer, DuckDNS, OpenVPN-AS).
+This repository contains Docker Compose configurations for a Home Assistant setup, organized into stacks: `hass` (Home Assistant core), `tool` (tools like Certbot, Deconz, Mosquitto, Duplicati), `sys` (system services like Portainer, DuckDNS, OpenVPN-AS), and `all` (runs all stacks).
 
 ## Profiles
 
 - `basic`: Minimal setup (e.g., Home Assistant and DuckDNS).
-- `full`: Complete setup with all services.
 - `extra`: Additional tools and services (e.g., Deconz, Mosquitto, Duplicati, Portainer, OpenVPN-AS).
+- `full`: Complete setup with all services.
 
 ## Using run.sh
 
@@ -19,13 +19,13 @@ The `run.sh` script manages Docker Compose operations for the stacks.
 ```
 
 - `<operation>`: `up` (start containers) or `down` (stop containers).
-- `[stack]`: Optional. `sys`, `tool`, `hass`, or `full` (runs all stacks). Defaults to `full`.
-- `[profile]`: Optional. `basic`, `full`, or `extra`. Defaults to `basic`.
+- `[stack]`: Optional. `all`, `sys`, `tool`, or `hass`. Defaults to `all`.
+- `[profile]`: Optional. `basic`, `extra`, or `full`. Defaults to `basic`.
 
 ### Examples
 
 - Start all stacks with default profile (`basic`): `./run.sh up`
-- Start all stacks with `full` profile: `./run.sh up full`
+- Start all stacks with `full` profile: `./run.sh up all full`
 - Start only the `hass` stack with `extra` profile: `./run.sh up hass extra`
 - Stop all stacks: `./run.sh down`
 

@@ -2,7 +2,7 @@
 
 # Validate the first argument: must be "up" or "down" to proceed
 if { [ "$1" != "up" ] && [ "$1" != "down" ]; }; then
-	echo "Usage: ./$0 up|down [sys|tool|hass|full] [basic|extra|full]"
+	echo "Usage: ./$0 up|down [sys|tool|hass|all] [basic|extra|full]"
 	exit 1
 fi
 
@@ -20,31 +20,31 @@ profileStr=""
 
 # Handle arguments
 if [ $# -ge 2 ]; then
-	if [ "$2" = "sys" ] || [ "$2" = "tool" ] || [ "$2" = "hass" ] || [ "$2" = "full" ]; then
+	if [ "$2" = "all" ] || [ "$2" = "sys" ] || [ "$2" = "tool" ] || [ "$2" = "hass" ]; then
 		stack="$2"
 		if [ $# -eq 3 ]; then
-			if [ "$3" = "basic" ] || [ "$3" = "full" ] || [ "$3" = "extra" ]; then
+			if [ "$3" = "basic" ] || [ "$3" = "extra" ] || [ "$3" = "full" ]; then
 				profile="$3"
 			else
-				echo "Usage: ./$0 $1 [sys|tool|hass|full] [basic|extra|full]"
+				echo "Usage: ./$0 $1 [all|sys|tool|hass] [basic|extra|full]"
 				exit 1
 			fi
 		fi
-	elif [ "$2" = "basic" ] || [ "$2" = "full" ] || [ "$2" = "extra" ]; then
+	elif [ "$2" = "basic" ] || [ "$2" = "extra" ] || [ "$2" = "full" ]; then
 		profile="$2"
 		if [ $# -gt 2 ]; then
 			echo "Usage: ./$0 $1 [sys|tool|hass|full] [basic|extra|full]"
 			exit 1
 		fi
 	else
-		echo "Usage: ./$0 $1 [sys|tool|hass|full] [basic|extra|full]"
+		echo "Usage: ./$0 $1 [all|sys|tool|hass] [basic|extra|full]"
 		exit 1
 	fi
 fi
 
 # Set defaults
 if [ -z "$stack" ]; then
-	stack="full"
+	stack="all"
 fi
 if [ -z "$profile" ]; then
 	profile="basic"
@@ -54,7 +54,7 @@ fi
 profileStr="--profile $profile"
 
 # Execute commands
-if [ "$stack" = "full" ]; then
+if [ "$stack" = "all" ]; then
 	# Run docker compose for all stacks in sequence (hass, tool, sys)
 	docker compose -f hass-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
 	docker compose -f tool-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}

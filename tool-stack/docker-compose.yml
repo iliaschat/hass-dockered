@@ -6,14 +6,19 @@ services:
       - basic
       - extra
       - full
-    command: certonly --standalone --email ${DOMAIN_EMAIL} --agree-tos --no-eff-email -d ${DUCKDNS_DOMAIN}
+    command: "certonly --standalone \
+      --email ${DOMAIN_EMAIL} \
+      --agree-tos \
+      --no-eff-email \
+      -d ${DUCKDNS_DOMAIN}"
     volumes:
       - ./config/letsencrypt:/etc/letsencrypt
-      - ./config/certbot:/var/lib/letsencrypt
-    networks:
-      - hass-network
-    ports:
-      - 80:80
+    network_mode: host
+    # Uncomment below to use bridge networking instead of host
+    # networks:
+    #   - hass-network
+    # ports:
+    #   - 80:80
 
   deconz:
     image: deconzcommunity/deconz:stable
