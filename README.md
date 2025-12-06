@@ -1,6 +1,39 @@
 # Hass-Dockered
 
-This project provides a Docker-based setup for running Home Assistant (HA) with supporting services, organized into modular stacks for system management, tools, and the core HA application.
+This repository contains Docker Compose configurations for a Home Assistant setup, organized into stacks: `hass` (Home Assistant core), `tool` (tools like Certbot, Deconz, Mosquitto, Duplicati), and `sys` (system services like Portainer, DuckDNS, OpenVPN-AS).
+
+## Profiles
+
+- `basic`: Minimal setup (e.g., Home Assistant and DuckDNS).
+- `full`: Complete setup with all services.
+- `extra`: Additional tools and services (e.g., Deconz, Mosquitto, Duplicati, Portainer, OpenVPN-AS).
+
+## Using run.sh
+
+The `run.sh` script manages Docker Compose operations for the stacks.
+
+### Syntax
+
+```bash
+./run.sh <operation> [stack] [profile]
+```
+
+- `<operation>`: `up` (start containers) or `down` (stop containers).
+- `[stack]`: Optional. `sys`, `tool`, `hass`, or `full` (runs all stacks). Defaults to `full`.
+- `[profile]`: Optional. `basic`, `full`, or `extra`. Defaults to `basic`.
+
+### Examples
+
+- Start all stacks with default profile (`basic`): `./run.sh up`
+- Start all stacks with `full` profile: `./run.sh up full`
+- Start only the `hass` stack with `extra` profile: `./run.sh up hass extra`
+- Stop all stacks: `./run.sh down`
+
+### Notes
+
+- When `up` is used, containers start in detached mode.
+- Ensure `.env` file is configured with required environment variables.
+- Profiles control which services start based on the docker-compose.yml files.
 
 ## Overview
 

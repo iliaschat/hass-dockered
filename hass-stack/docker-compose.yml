@@ -2,6 +2,9 @@ services:
   core-mariadb:
     image: mariadb
     container_name: core-mariadb
+    profiles:
+      - extra
+      - full
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
@@ -19,26 +22,15 @@ services:
     # ports:
     #   - 3306:3306
 
-  core-configurator:
-    image: causticlab/hass-configurator-docker:arm
-    container_name: core-configurator
-    depends_on:
-      - homeassistant
-    user: ${PUID}:${PGID}
-    volumes:
-      - ./config/configurator:/config
-      - ./config/hass_config:/hass-config
-    restart: unless-stopped
-    networks:
-      - hass-network
-    ports:
-      - 3218:3218/tcp
-
   homeassistant:
     container_name: homeassistant
     image: homeassistant/home-assistant:stable
     depends_on:
       - core-mariadb
+    profiles:
+      - basic
+      - extra
+      - full
     environment:
       - TZ=${TZ}
     volumes:
@@ -52,6 +44,23 @@ services:
     #   - "8123:8123"
     # networks:
     #   - hass-network
+
+  core-configurator:
+    image: causticlab/hass-configurator-docker:arm
+    container_name: core-configurator
+    depends_on:
+      - homeassistant
+    #    user: ${PUID}:${PGID}
+    profiles:
+      - full
+    volumes:
+      - ./config/configurator:/config
+      - ./config/hass_config:/hass-config
+    restart: unless-stopped
+    networks:
+      - hass-network
+    ports:
+      - 3218:3218/tcp
 
 networks:
   hass-network:

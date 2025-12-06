@@ -2,6 +2,9 @@ services:
   portainer:
     container_name: portainer
     image: portainer/portainer-ce:lts
+    profiles:
+      - extra
+      - full
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -13,6 +16,10 @@ services:
   duckdns:
     image: linuxserver/duckdns
     container_name: duckdns
+    profiles:
+      - basic
+      - extra
+      - full
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -22,12 +29,13 @@ services:
     volumes:
       - ./config/duckdns:/config
     restart: unless-stopped
-    networks:
-      - sys-network
 
   openvpn-as:
     container_name: openvpn-as
     image: openvpn/openvpn-as
+    profiles:
+      - extra
+      - full
     restart: unless-stopped
     devices:
       - /dev/net/tun
@@ -48,5 +56,3 @@ volumes:
 networks:
   default:
     name: portainer_network
-  hass-network:
-    driver: bridge
