@@ -5,6 +5,6 @@
 # Install cron if not present
 apt-get update && apt-get install -y cron
 # Add cron job to run backup.sh at 1am daily
-echo "0 1 * * * /usr/local/bin/backup.sh" >> /etc/crontab
+echo "0 1 * * * /docker-entrypoint-initdb.d/backup.sh" >>/etc/crontab
 # Start cron in the background
 cron
