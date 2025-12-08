@@ -31,7 +31,11 @@ services:
       - full
     environment:
       - TZ=${TZ}
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
     volumes:
+      - /run/dbus:/run/dbus:ro
       - ./config/hass_config:/config
       - ../tool-stack/config/letsencrypt:/etc/letsencrypt:ro
     restart: unless-stopped
