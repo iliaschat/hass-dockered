@@ -2,6 +2,10 @@ services:
   caddy:
     image: caddy:latest
     container_name: reverse-proxy-caddy
+    profiles:
+      - basic
+      - extra
+      - full
     volumes:
       - ./config/caddy/Caddyfile:/etc/caddy/Caddyfile
       - ./config/caddy/data:/data
