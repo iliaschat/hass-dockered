@@ -2,7 +2,7 @@
 
 # Validate the first argument: must be "up" or "down" to proceed
 if { [ "$1" != "up" ] && [ "$1" != "down" ]; }; then
-	echo "Usage: ./$0 up|down"
+	echo "Usage: ./$0 up|down [sys|tool|hass|all] [basic|extra|full]"
 	exit 1
 fi
 
@@ -13,18 +13,57 @@ if [ "$1" = "up" ]; then
 	opStr="${opStr} -d"
 fi
 
-# Check if a second argument is provided (to target a specific stack)
-if [ $# -eq 2 ]; then
-	# Validate the second argument: must be "sys", "tool", or "hass"
-	if [ $# -ne 2 ] || { [ "$2" != "sys" ] && [ "$2" != "tool" ] && [ "$2" != "hass" ]; }; then
-		echo "Usage: ./$0 $1 [sys|tool|hass]"
+# Initialize variables
+stack=""
+profile=""
+profileStr=""
+
+# Handle arguments
+if [ $# -ge 2 ]; then
+	if [ "$2" = "all" ] || [ "$2" = "sys" ] || [ "$2" = "tool" ] || [ "$2" = "hass" ]; then
+		stack="$2"
+		if [ $# -eq 3 ]; then
+			if [ "$3" = "basic" ] || [ "$3" = "extra" ] || [ "$3" = "full" ]; then
+				profile="$3"
+			else
+				echo "Usage: ./$0 $1 [all|sys|tool|hass] [basic|extra|full]"
+				exit 1
+			fi
+		fi
+	elif [ "$2" = "basic" ] || [ "$2" = "extra" ] || [ "$2" = "full" ]; then
+		profile="$2"
+		if [ $# -gt 2 ]; then
+			echo "Usage: ./$0 $1 [sys|tool|hass|full] [basic|extra|full]"
+			exit 1
+		fi
+	else
+		echo "Usage: ./$0 $1 [all|sys|tool|hass] [basic|extra|full]"
 		exit 1
 	fi
-	# Run docker compose for the specified single stack
-	docker compose -f $2-stack/docker-compose.yml --env-file .env ${opStr}
-else
-	# Run docker compose for all stacks in sequence (hass, tool, sys)
-	docker compose -f hass-stack/docker-compose.yml --env-file .env ${opStr}
-	docker compose -f tool-stack/docker-compose.yml --env-file .env ${opStr}
-	docker compose -f sys-stack/docker-compose.yml --env-file .env ${opStr}
 fi
+
+# Set defaults
+if [ -z "$stack" ]; then
+	stack="all"
+fi
+if [ -z "$profile" ]; then
+	profile="basic"
+fi
+
+# Set profile string
+profileStr="--profile $profile"
+
+# Execute commands
+if [ "$stack" = "all" ]; then
+	# Run docker compose for all stacks in sequence (hass, tool, sys)
+	docker compose -f hass-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
+	docker compose -f tool-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
+	docker compose -f sys-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
+else
+	# Run docker compose for the specified single stack
+	docker compose -f $stack-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
+fi
+
+echo "Operation: $opStr"
+echo "Stack: $stack"
+echo "Profile: $profile"

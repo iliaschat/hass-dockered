@@ -16,6 +16,9 @@ services:
   deconz:
     image: deconzcommunity/deconz:stable
     container_name: deconz
+    profiles:
+      - extra
+      - full
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0
     environment:
@@ -42,6 +45,9 @@ services:
     image: eclipse-mosquitto
     container_name: mosquitto
     user: ${PUID}:${PGID}
+    profiles:
+      - extra
+      - full
     environment:
       - TZ=${TZ}
     volumes:
@@ -60,6 +66,9 @@ services:
   duplicati:
     image: linuxserver/duplicati
     container_name: duplicati
+    profiles:
+      - extra
+      - full
     environment:
       - PUID=0
       - PGID=0
@@ -69,7 +78,8 @@ services:
     volumes:
       - ./config/duplicati/config:/config
       - ./config/duplicati/backups:/backups
-      - ./config/hass_config:/source
+      - ../hass-stack/config/hass_config:/sources/hass_config
+      - ../hass-stack/config/mariadb/backup:/sources/mariadb_backup
     restart: unless-stopped
     network_mode: host
     # Uncomment below to use bridge networking instead of host

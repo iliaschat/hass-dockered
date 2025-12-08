@@ -1,0 +1,2 @@
+# MariaDB cron jobs
+0 1 * * * /docker-entrypoint-initdb.d/backup.sh
