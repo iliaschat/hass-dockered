@@ -1,0 +1,11 @@
+name: Restrict Merge Branches
+on: pull_request
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Block merges from specific branches
+        if: github.base_ref == 'main' && endsWith(github.head_ref, 'caddy')
+        run: |
+          echo "Merging 'caddy' into main is not allowed."
+          exit 1
