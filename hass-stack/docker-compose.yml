@@ -2,10 +2,13 @@ services:
   core-mariadb:
     image: mariadb
     container_name: core-mariadb
+    post_start:
+      - command: [sh, -c, /docker-entrypoint-initdb.d/init.sh]
     profiles:
       - extra
       - full
     environment:
+      - TZ=${TZ}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
@@ -14,7 +17,6 @@ services:
       - ./config/mariadb/backup:/backup
       - ./config/mariadb/conf:/var/lib/mysql
       - ./config/mariadb-init:/docker-entrypoint-initdb.d
-    command: cron
     restart: unless-stopped
     network_mode: host
     # Uncomment below to use bridge networking instead of host
