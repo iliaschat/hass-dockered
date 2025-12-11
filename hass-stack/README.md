@@ -50,11 +50,11 @@ TZ=America/New_York
 ## SSL Configuration
 
 - If using a reverse proxy like Caddy, ensure it is configured to handle SSL.
-- To use SSL certificates downloaded using Caddy from the tool-stack, add the following to your Home Assistant `configuration.yml`:
+- To use SSL certificates downloaded using Certbot from the tool-stack, add the following to your Home Assistant `configuration.yml`:
   ```
   http:
-    ssl_certificate: /caddy/data/sites/<YOUR DOMAIN NAME>/fullchain.pem
-    ssl_key: /caddy/data/sites/<YOUR DOMAIN NAME>/privkey.pem
+    ssl_certificate: /var/lib/letsencrypt/fullchain.pem
+    ssl_key: /var/lib/letsencrypt/privkey.pem
     use_x_forwarded_for: true
   ```
 

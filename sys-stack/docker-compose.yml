@@ -46,7 +46,7 @@ services:
       - NET_ADMIN
     ports:
       - 943:943
-      # - 443:443  # Uncomment if not using Caddy or another reverse proxy on host
+      - 443:443
       - 1194:1194/udp
 
 volumes:

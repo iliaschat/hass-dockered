@@ -38,7 +38,7 @@ services:
     volumes:
       - /run/dbus:/run/dbus:ro
       - ./config/hass_config:/config
-      - ../tool-stack/config/caddy:/caddy
+      - ../tool-stack/config/letsencrypt:/etc/letsencrypt:ro
     restart: unless-stopped
     network_mode: host
     # Uncomment below to use bridge networking instead of host

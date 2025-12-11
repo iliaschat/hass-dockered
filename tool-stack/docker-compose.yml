@@ -1,17 +1,24 @@
 services:
-  caddy:
-    image: caddy:latest
-    container_name: reverse-proxy-caddy
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    profiles:
+      - basic
+      - extra
+      - full
+    command: "certonly --standalone \
+      --email ${DOMAIN_EMAIL} \
+      --agree-tos \
+      --no-eff-email \
+      -d ${DUCKDNS_DOMAIN}"
     volumes:
-      - ./config/caddy/Caddyfile:/etc/caddy/Caddyfile
-      - ./config/caddy/data:/data
-      - ./config/caddy/config:/config
-    restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
-    networks:
-      - hass-network
+      - ./config/letsencrypt:/etc/letsencrypt
+    network_mode: host
+    # Uncomment below to use bridge networking instead of host
+    # networks:
+    #   - hass-network
+    # ports:
+    #   - 80:80
 
   deconz:
     image: deconzcommunity/deconz:stable

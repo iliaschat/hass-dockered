@@ -42,7 +42,7 @@ Hass-Dockered is designed to containerize Home Assistant and related components 
 ## Stacks
 
 - **sys-stack**: Handles system-level services like Portainer (Docker management), DuckDNS (dynamic DNS), and OpenVPN Access Server (VPN access).
-- **tool-stack**: Includes tools for SSL certificates & Reverse Proxy (Caddy), Zigbee gateway (deCONZ), MQTT broker (Mosquitto), and backups (Duplicati).
+- **tool-stack**: Includes tools for SSL certificates (Certbot), Zigbee gateway (deCONZ), MQTT broker (Mosquitto), and backups (Duplicati).
 - **hass-stack**: Runs the core Home Assistant application with MariaDB (database) and HASS Configurator (web-based editor).
 
 ## Requirements
@@ -124,7 +124,7 @@ The `run.sh` script simplifies stack management. Ensure it's executable with `ch
 - **Ensure `.env` variables are set correctly**: Missing or incorrect values can cause startup failures. Double-check against the example.
 - **Check logs**: Run `docker-compose logs` in each stack folder or use `sh run.sh up` and inspect output for errors.
 - **Port conflicts**: If ports are in use, stop conflicting services or change ports in docker-compose.yml files.
-- **SSL issues**: Verify Caddy certificates are valid and HA config points to the correct paths. Renew certificates if expired.
+- **SSL issues**: Verify Certbot certificates are valid and HA config points to the correct paths. Renew certificates if expired.
 - **Device access**: For deCONZ, ensure the Zigbee USB device is mapped correctly in the compose file and accessible.
 - **Performance**: Monitor resource usage with `docker stats`. Increase RAM/CPU if HA is slow.
 - **Common errors**: "Permission denied" – run with `sudo` or adjust Docker user permissions. "Network not found" – ensure networks are defined.
