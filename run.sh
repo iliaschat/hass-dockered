@@ -43,27 +43,27 @@ if [ $# -ge 2 ]; then
 fi
 
 # Set defaults
-if [ -z "$stack" ]; then
+if [ -z "${stack}" ]; then
 	stack="all"
 fi
-if [ -z "$profile" ]; then
+if [ -z "${profile}" ]; then
 	profile="basic"
 fi
 
 # Set profile string
-profileStr="--profile $profile"
+profileStr="--profile ${profile}"
 
 # Execute commands
-if [ "$stack" = "all" ]; then
+if [ "${stack}" = "all" ]; then
 	# Run docker compose for all stacks in sequence (hass, tool, sys)
-	docker compose -f hass-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
-	docker compose -f tool-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
-	docker compose -f sys-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
+	docker compose -f hass-stack/docker-compose.yml --env-file .env "${profileStr}" "${opStr}"
+	docker compose -f tool-stack/docker-compose.yml --env-file .env "${profileStr}" "${opStr}"
+	docker compose -f sys-stack/docker-compose.yml --env-file .env "${profileStr}" "${opStr}"
 else
 	# Run docker compose for the specified single stack
-	docker compose -f $stack-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
+	docker compose -f "${stack}"-stack/docker-compose.yml --env-file .env "${profileStr}" "${opStr}"
 fi
 
-echo "Operation: $opStr"
-echo "Stack: $stack"
-echo "Profile: $profile"
+echo "Operation: ${opStr}"
+echo "Stack: ${stack}"
+echo "Profile: ${profile}"

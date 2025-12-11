@@ -35,11 +35,11 @@ services:
     profiles:
       - extra
       - full
-    restart: unless-stopped
     devices:
       - /dev/net/tun
     volumes:
       - ./config/openvpn:/openvpn
+    restart: unless-stopped
     cap_add:
       - MKNOD
       - NET_ADMIN
