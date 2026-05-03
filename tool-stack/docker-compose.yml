@@ -1,24 +1,4 @@
 services:
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    profiles:
-      - basic
-      - extra
-      - full
-    command: "certonly --standalone \
-      --email ${DOMAIN_EMAIL} \
-      --agree-tos \
-      --no-eff-email \
-      -d ${DUCKDNS_DOMAIN}"
-    volumes:
-      - ./config/letsencrypt:/etc/letsencrypt
-    network_mode: host
-    # Uncomment below to use bridge networking instead of host
-    # networks:
-    #   - hass-network
-    # ports:
-    #   - 80:80
 
   deconz:
     image: deconzcommunity/deconz:stable

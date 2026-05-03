@@ -1,0 +1,46 @@
+access_log /dev/stdout;
+error_log /dev/stdout;
+
+server {
+  listen 80 default_server;
+  server_name _;
+  return 301 https://$host$request_uri;
+}
+
+server {
+  listen 443 ssl;
+  http2 on;
+  server_name ${DOMAIN};
+
+  ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/cert.pem;
+  ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+#  ssl_dhparam         /etc/letsencrypt/live/${DOMAIN}/dhparams.pem;
+
+  # Security headers
+  add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+  proxy_buffering off;
+
+  location / {
+    root /var/www/html;
+    index index.html index.htm;
+    try_files $uri $uri/ =404;
+  }
+
+  location /hass/ {
+    proxy_pass http://192.168.178.28:8123;
+    proxy_set_header Host $host;
+    proxy_redirect http:// https://;
+    proxy_http_version 1.1;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+  }
+
+  location /hass/api/websocket {
+    proxy_pass http://192.168.178.28:8123/api/websocket;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+  }
+}
