@@ -1,6 +1,13 @@
 access_log /dev/stdout;
 error_log /dev/stdout;
 
+resolver 127.0.0.11 valid=10s;
+
+upstream homeassistant {
+  zone homeassistant 64k;
+  server 192.168.178.28:8123 resolve;
+}
+
 server {
   listen 80 default_server;
   server_name _;
@@ -22,13 +29,7 @@ server {
   proxy_buffering off;
 
   location / {
-    root /var/www/html;
-    index index.html index.htm;
-    try_files $uri $uri/ =404;
-  }
-
-  location /hass/ {
-    proxy_pass http://192.168.178.28:8123;
+    proxy_pass http://homeassistant;
     proxy_set_header Host $host;
     proxy_redirect http:// https://;
     proxy_http_version 1.1;
@@ -37,10 +38,22 @@ server {
     proxy_set_header Connection "upgrade";
   }
 
-  location /hass/api/websocket {
-    proxy_pass http://192.168.178.28:8123/api/websocket;
+  location /api/websocket {
+    proxy_pass http://homeassistant/api/websocket;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
   }
+}
+
+server {
+  listen 443;
+  server_name _;
+  return       404;
+
+#  location / {
+#    root /var/www/html;
+#    index index.html index.htm;
+#    try_files $uri $uri/ =404;
+#  }
 }

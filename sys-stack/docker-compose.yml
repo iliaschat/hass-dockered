@@ -25,8 +25,8 @@ services:
     ports:
       - 80:80
     volumes:
-      - ./config/letsencrypt:/etc/letsencrypt
-      # - cert_volume:/etc/letsencrypt
+      # - ./config/letsencrypt:/etc/letsencrypt
+      - cert_volume:/etc/letsencrypt
 
   nginx:
     image: nginx
@@ -43,16 +43,19 @@ services:
     volumes:
       - ./config/nginx:/etc/nginx/templates # to configure nginx
       - ./config/nginx/static:/var/www/html # provide static web site
-      - ./config/letsencrypt:/etc/letsencrypt
-      - ./config/acme_challenge:/usr/share/nginx/html/.well-known
-      # - cert_volume:/etc/letsencrypt
-      # - acme_challenge:/usr/share/nginx/html/.well-known
+      # - ./config/letsencrypt:/etc/letsencrypt
+      # - ./config/acme_challenge:/usr/share/nginx/html/.well-known
+      - cert_volume:/etc/letsencrypt
+      - acme_challenge:/usr/share/nginx/html/.well-known
     environment:
       DOMAIN: ${DUCKDNS_DOMAIN}
     depends_on:
       certbot-init:
         condition: service_completed_successfully
         required: true
+    networks:
+      - default
+      - hass-network
 
   certbot:
     image: certbot/certbot
@@ -68,10 +71,10 @@ services:
         condition: service_started
         required: true
     volumes:
-      - ./config/letsencrypt:/etc/letsencrypt
-      - ./config/acme_challenge:/usr/share/nginx/html/.well-known
-      # - cert_volume:/etc/letsencrypt
-      # - acme_challenge:/usr/share/nginx/html/.well-known
+      # - ./config/letsencrypt:/etc/letsencrypt
+      # - ./config/acme_challenge:/usr/share/nginx/html/.well-known
+      - cert_volume:/etc/letsencrypt
+      - acme_challenge:/usr/share/nginx/html/.well-known
 
   # duckdns:
   #   container_name: duckdns
@@ -106,15 +109,19 @@ services:
       - NET_ADMIN
     ports:
       - 943:943
-      - 443:443
+      - 4443:443
       - 1194:1194/udp
 
 volumes:
   portainer_data:
     name: portainer_data
-  # cert_volume:
-  # acme_challenge:
+  cert_volume:
+    name: cert_volume
+  acme_challenge:
+    name: acme_challenge
 
 networks:
   default:
     name: portainer_network
+  hass-network:
+    driver: bridge
