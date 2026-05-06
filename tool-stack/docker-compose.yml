@@ -1,24 +1,4 @@
 services:
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    profiles:
-      - basic
-      - extra
-      - full
-    command: "certonly --standalone \
-      --email ${DOMAIN_EMAIL} \
-      --agree-tos \
-      --no-eff-email \
-      -d ${DUCKDNS_DOMAIN}"
-    volumes:
-      - ./config/letsencrypt:/etc/letsencrypt
-    network_mode: host
-    # Uncomment below to use bridge networking instead of host
-    # networks:
-    #   - hass-network
-    # ports:
-    #   - 80:80
 
   deconz:
     image: deconzcommunity/deconz:stable
@@ -40,13 +20,13 @@ services:
     volumes:
       - ./config/deconz:/opt/deCONZ
     restart: unless-stopped
-    network_mode: host
+    # network_mode: host
     # Uncomment below to use bridge networking instead of host
-    # networks:
-    #   - hass-network
-    # ports:
-    #   - 8080:80
-    #   - 8443:443
+    networks:
+      - hass-network
+    ports:
+      - 8080:80
+      - 8443:443
 
   mosquitto:
     image: eclipse-mosquitto
@@ -62,13 +42,13 @@ services:
       - ./config/mosquitto/data:/mosquitto/data
       - ./config/mosquitto/log:/mosquitto/log
     restart: unless-stopped
-    network_mode: host
+    # network_mode: host
     # Uncomment below to use bridge networking instead of host
-    # networks:
-    #   - hass-network
-    # ports:
-    #   - 1883:1883
-    #   - 9001:9001
+    networks:
+      - hass-network
+    ports:
+      - 1883:1883
+      - 9001:9001
 
   duplicati:
     image: linuxserver/duplicati
@@ -88,12 +68,12 @@ services:
       - ../hass-stack/config/hass_config:/sources/hass_config
       - ../hass-stack/config/mariadb/backup:/sources/mariadb_backup
     restart: unless-stopped
-    network_mode: host
+    # network_mode: host
     # Uncomment below to use bridge networking instead of host
-    # ports:
-    #   - 8200:8200
-    # networks:
-    #   - hass-network
+    ports:
+      - 8200:8200
+    networks:
+      - hass-network
 
 networks:
   hass-network:
