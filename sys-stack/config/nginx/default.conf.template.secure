@@ -86,21 +86,17 @@ server {
     return 444;
   }
 
-  # Filter query string for dangerous patterns
-  if ($query_string ~* "(proc/self/environ|/etc/passwd|php://|data://|expect://|../../)") {
+  # Block TLS handshakes on HTTP port
+  if ($request ~ "^\x16") {
     return 444;
   }
 
-  # Block specific User-Agent patterns
-  if ($http_user_agent ~* "php|base64|<script>") {
+  if ($query_string ~* "(proc/self/environ|/etc/passwd|php://|data://|expect://|../../|proc%2fself%2fenviron|%2fetc%2fpasswd|php%3a%2f%2f|data%3a%2f%2f|expect%3a%2f%2f|%2e%2e%2f%2e%2e%2f|%3Cscript%3E|alert%28|checkwaf)") {
     return 444;
   }
 
-  # Disable buffering for real-time WebSocket updates
-  proxy_buffering off;
-
-  # Block URIs with dangerous patterns
-  location ~* (proc/self/environ|/etc/passwd|php://|data://|expect://|\.\./\.\.) {
+  # Block dangerous patterns in URI and query string (including URL-encoded versions)
+  location ~* (proc/self/environ|/etc/passwd|php://|data://|expect://|../../|proc%2fself%2fenviron|%2fetc%2fpasswd|php%3a%2f%2f|data%3a%2f%2f|expect%3a%2f%2f|%2e%2e%2f%2e%2e%2f) {
     return 444;
   }
 
@@ -109,18 +105,8 @@ server {
     return 444;
   }
 
-  # Block common vulnerable paths
-  location ~ ^/(cgi-bin|cgi|phpmyadmin|admin|wp-admin|wp-content|wp-includes|xmlrpc\.php|readme\.html|license\.txt) {
-    return 444;
-  }
-
-  # Block paths starting with a dot (e.g., .git, .env)
-  location ~ ^/\. {
-    return 444;
-  }
-
-  # Block directory traversal attempts (e.g., ../, .%2e, %%32%65 variants)
-  location ~* (\.\./|\.%2e|%%[0-9a-fA-F][0-9a-fA-F]) {
+  # Block common vulnerable and sensitive system paths
+  location ~* /(cgi-bin|cgi|phpmyadmin|admin|wp-admin|wp-content|wp-includes|xmlrpc\.php|readme\.html|license\.txt|\.git|bin\/sh|\.env|wp-config|libredtail) {
     return 444;
   }
 
