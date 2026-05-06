@@ -41,8 +41,8 @@ Hass-Dockered is designed to containerize Home Assistant and related components 
 
 ## Stacks
 
-- **sys-stack**: Handles system-level services like Portainer (Docker management), DuckDNS (dynamic DNS), and OpenVPN Access Server (VPN access).
-- **tool-stack**: Includes tools for SSL certificates (Certbot), Zigbee gateway (deCONZ), MQTT broker (Mosquitto), and backups (Duplicati).
+- **sys-stack**: Handles system-level services like Portainer (Docker management), DuckDNS (dynamic DNS), OpenVPN Access Server (VPN access), SSL certificates (Certbot), and Nginx reverse proxy.
+- **tool-stack**: Includes integrations like Zigbee gateway (deCONZ), MQTT broker (Mosquitto), and backups (Duplicati).
 - **hass-stack**: Runs the core Home Assistant application with MariaDB (database) and HASS Configurator (web-based editor).
 
 ## Requirements
@@ -74,10 +74,10 @@ PGID=1000
 TZ=America/New_York
 DUCKDNS_SUBDOMAINS=yourdomain
 DUCKDNS_TOKEN=your_token
-
-# Tool Stack
 DOMAIN_EMAIL=your_email@example.com
 DUCKDNS_DOMAIN=yourdomain.duckdns.org
+
+# Tool Stack
 DUPLICATI_ENCRYPTION_KEY=your_encryption_key
 DUPLICATI_WEBSERVICE_PASSWORD=your_password
 
@@ -87,6 +87,27 @@ MYSQL_DATABASE=homeassistant
 MYSQL_USER=homeassistant
 MYSQL_PASSWORD=your_password
 ```
+
+## SSL Certificate Setup (Optional)
+
+If you prefer to use self-signed certificates instead of Let's Encrypt (via Certbot), you can generate RSA PEM files using OpenSSL.
+
+### Generate RSA Private Key and Self-Signed Certificate
+
+```bash
+openssl req -newkey rsa:2048 -nodes -keyout privkey.pem -x509 -days 365 -out cert.pem
+```
+
+- `-newkey rsa:2048`: Generate a new 2048-bit RSA key.
+- `-nodes`: Do not encrypt the private key (no passphrase).
+- `-keyout privkey.pem`: Save the private key to `privkey.pem`.
+- `-x509`: Create a self-signed certificate.
+- `-days 365`: Certificate valid for 365 days.
+- `-out cert.pem`: Save the certificate to `cert.pem`.
+
+You’ll be prompted to enter details like Country, Organization, and Common Name (domain).
+
+Place the generated `cert.pem` and `privkey.pem` files in the appropriate directory (e.g., `./sys-stack/config/nginx/`) and update the Nginx configuration accordingly.
 
 ## Usage
 
