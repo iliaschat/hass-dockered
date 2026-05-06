@@ -1,12 +1,15 @@
 # Nginx configuration template for Home Assistant reverse proxy
 # This config provides SSL termination, security hardening, and proxying to Home Assistant
 
-access_log /dev/stdout warn;
+# Global directives
+access_log /dev/stdout;
 error_log /dev/stdout warn;
+server_tokens off;
 
 # DNS resolver for dynamic upstream resolution
 resolver 127.0.0.11 valid=10s;
 
+# Maps
 # Map for WebSocket upgrade handling
 map $http_upgrade $connection_upgrade {
   default upgrade;
@@ -41,6 +44,7 @@ server {
   listen 80 default_server;
   server_name _;
   location / {
+    # Proxy headers
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -50,6 +54,8 @@ server {
     proxy_set_header Connection $connection_upgrade;
     proxy_redirect off;
     proxy_buffering off;
+
+    # Allow only LAN access
     if ($lan_access = 0) {
       return 444;
     }
@@ -66,22 +72,32 @@ server {
   # SSL Configuration
   ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/cert.pem;
   ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+  ssl_protocols       TLSv1.2 TLSv1.3;
+  ssl_ciphers         HIGH:!aNULL:!MD5;
 
   # Security headers
   add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+  # Content-Security-Policy: Prevents XSS by restricting resource loading. Allows self, inline scripts/styles for HA, HTTPS/WebSockets for connectivity, blocks objects/frames.
+  add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https: wss:; media-src 'self' data: https:; object-src 'none'; frame-ancestors 'self'; base-uri 'none';" always;
 
-  # Disable buffering for real-time Websocket updates
-  proxy_buffering off;
+  # Security checks
+  # Block OPTIONS method as it's not needed for Home Assistant
+  if ($request_method = 'OPTIONS') {
+    return 444;
+  }
 
   # Filter query string for dangerous patterns
   if ($query_string ~* "(proc/self/environ|/etc/passwd|php://|data://|expect://|../../)") {
     return 444;
   }
 
-  # Optional: Block specific User-Agent or header patterns if needed
+  # Block specific User-Agent patterns
   if ($http_user_agent ~* "php|base64|<script>") {
     return 444;
   }
+
+  # Disable buffering for real-time WebSocket updates
+  proxy_buffering off;
 
   # Block URIs with dangerous patterns
   location ~* (proc/self/environ|/etc/passwd|php://|data://|expect://|\.\./\.\.) {
@@ -103,14 +119,16 @@ server {
     return 444;
   }
 
-  # Block directory traversal attempts (e.g., ../)
-  location ~ \.\./ {
+  # Block directory traversal attempts (e.g., ../, .%2e, %%32%65 variants)
+  location ~* (\.\./|\.%2e|%%[0-9a-fA-F][0-9a-fA-F]) {
     return 444;
   }
 
   # Specific WebSocket Endpoint
   location /api/websocket {
     proxy_pass http://homeassistant/api/websocket;
+
+    # Proxy headers
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -125,6 +143,8 @@ server {
   # General Proxy Settings
   location / {
     proxy_pass http://homeassistant;
+
+    # Proxy headers
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -144,14 +164,7 @@ server {
   listen 443 ssl default_server;
   ssl_certificate     /etc/nginx/templates/cert.pem;
   ssl_certificate_key /etc/nginx/templates/privkey.pem;
-  # Recommended modern protocol settings
-  ssl_protocols TLSv1.2 TLSv1.3;
-  ssl_ciphers HIGH:!aNULL:!MD5;
+  ssl_protocols       TLSv1.2 TLSv1.3;
+  ssl_ciphers         HIGH:!aNULL:!MD5;
   return 444;
-
-#  location / {
-#    root /var/www/html;
-#    index index.html index.htm;
-#    try_files $uri $uri/ =404;
-#  }
 }
