@@ -2,7 +2,7 @@
 # This config provides SSL termination, security hardening, and proxying to Home Assistant
 
 access_log /dev/stdout;
-error_log /dev/stdout;
+error_log /dev/stdout warn;
 
 # DNS resolver for dynamic upstream resolution
 resolver 127.0.0.11 valid=10s;

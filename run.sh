@@ -9,7 +9,7 @@ fi
 # Initialize opStr with the operation type ("up" or "down")
 opStr="$1"
 # If the operation is "up", append " -d" for detached mode in docker compose
-if [ "$1" = "up" ]; then
+if [ "$opStr" = "up" ]; then
 	opStr="${opStr} -d"
 fi
 
@@ -55,13 +55,20 @@ profileStr="--profile ${profile}"
 
 # Execute commands
 if [ "${stack}" = "all" ]; then
-	# Run docker compose for all stacks in sequence (hass, tool, sys)
-	docker compose -f hass-stack/docker-compose.yml --env-file .env "${profileStr}" "${opStr}"
-	docker compose -f tool-stack/docker-compose.yml --env-file .env "${profileStr}" "${opStr}"
-	docker compose -f sys-stack/docker-compose.yml --env-file .env "${profileStr}" "${opStr}"
+	if [ "${opStr}" = "down" ]; then
+		# Run docker compose for all stacks in reverse sequence (hass, tool, sys)
+		docker compose -f hass-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
+		docker compose -f tool-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
+		docker compose -f sys-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
+	else
+		# Run docker compose for all stacks in sequence (sys, tool, hass)
+		docker compose -f tool-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
+		docker compose -f hass-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
+		docker compose -f sys-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
+	fi
 else
 	# Run docker compose for the specified single stack
-	docker compose -f "${stack}"-stack/docker-compose.yml --env-file .env "${profileStr}" "${opStr}"
+	docker compose -f "${stack}"-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
 fi
 
 echo "Operation: ${opStr}"
