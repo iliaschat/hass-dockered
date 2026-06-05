@@ -1,0 +1,41 @@
+[nginx-noscript]
+enabled = true
+port = http,https
+filter = nginx-noscript
+logpath = /var/log/nginx/access.log
+action = iptables-multiport[name=nginx-noscript, port="http,https", protocol=tcp, chain=FORWARD]
+ignoreregex = .*GET /.well-known/acme-challenge/.*
+
+[nginx-badbots]
+enabled = true
+port = http,https
+filter = nginx-badbots
+logpath = /var/log/nginx/access.log
+action = iptables-multiport[name=nginx-badbots, port="http,https", protocol=tcp, chain=FORWARD]
+ignoreregex = .*GET /.well-known/acme-challenge/.*
+
+[nginx-noproxy]
+enabled = true
+port = http,https
+filter = nginx-noproxy
+logpath = /var/log/nginx/access.log
+action = iptables-multiport[name=nginx-noproxy, port="http,https", protocol=tcp, chain=FORWARD]
+ignoreregex = .*GET /.well-known/acme-challenge/.*
+
+[nginx-custom]
+enabled = true
+port = http,https
+filter = nginx-custom
+logpath = /var/log/nginx/access.log
+action = iptables-multiport[name=nginx-custom, port="http,https", protocol=tcp, chain=FORWARD]
+maxretry = 3
+bantime = 7d
+bantime.increment = true
+bantime.maxtime = -1
+
+[hass-iptables]
+enabled = true
+filter = hass
+action = iptables-allports[name=HASS, chain=FORWARD]
+logpath = /var/log/hass/home-assistant.log
+maxretry = 5

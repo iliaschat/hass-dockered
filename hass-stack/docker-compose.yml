@@ -41,6 +41,8 @@ services:
       - /run/dbus:/run/dbus:ro
       - ./config/hass_config:/config
       - ../sys-stack/config/letsencrypt:/etc/letsencrypt:ro
+      - ../host-stack/config/fail2ban/logs:/var/log/fail2ban:ro
+      # - fail2ban_socket:/var/run/fail2ban:ro
     restart: unless-stopped
     # network_mode: host
     # Uncomment below to use bridge networking instead of host
@@ -52,9 +54,7 @@ services:
   core-configurator:
     image: causticlab/hass-configurator-docker:arm
     container_name: core-configurator
-    depends_on:
-      - homeassistant
-    #    user: ${PUID}:${PGID}
+    #user: ${PUID}:${PGID}
     profiles:
       - full
     volumes:
@@ -69,3 +69,8 @@ services:
 networks:
   hass-network:
     driver: bridge
+
+# volumes:
+#   fail2ban_socket:
+#     name: fail2ban_socket
+#     external: true

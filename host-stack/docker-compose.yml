@@ -1,0 +1,113 @@
+services:
+
+  certbot-init:
+    container_name: certbot-init
+    image: certbot/certbot
+    profiles:
+      - basic
+      - extra
+      - full
+    entrypoint: /bin/sh
+    command: -c 'test -d /etc/letsencrypt/live/${DUCKDNS_DOMAIN} || certbot certonly -v --standalone -v -d ${DUCKDNS_DOMAIN} -m ${DOMAIN_EMAIL} --force-renewal --agree-tos'
+    ports:
+      - 80:80
+    volumes:
+      - cert_volume:/etc/letsencrypt
+
+  nginx:
+    image: nginx
+    container_name: nginx
+    profiles:
+      - basic
+      - extra
+      - full
+    entrypoint: /bin/sh
+    command: -c 'while :; do sleep 6h && wait $${!}; nginx -s reload; done & /docker-entrypoint.sh nginx -g "daemon off;error_log /dev/stdout debug;"'
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./config/nginx:/etc/nginx/templates # to configure nginx
+      - ./config/nginx/static:/var/www/html # provide static web site
+      - cert_volume:/etc/letsencrypt
+      - acme_challenge:/usr/share/nginx/html/.well-known
+      - nginx_logs:/var/log/nginx
+    environment:
+      DOMAIN: ${DUCKDNS_DOMAIN}
+    depends_on:
+      certbot-init:
+        condition: service_completed_successfully
+        required: true
+    networks:
+      - default
+      - hass-network
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    profiles:
+      - basic
+      - extra
+      - full
+    entrypoint: /bin/sh
+    command: -c 'trap exit TERM; while :; do certbot renew; sleep 24h && wait $${!}; done;'
+    depends_on:
+      nginx:
+        condition: service_started
+        required: true
+    volumes:
+      - cert_volume:/etc/letsencrypt
+      - acme_challenge:/usr/share/nginx/html/.well-known
+    restart: unless-stopped
+
+  fail2ban:
+    image: crazymax/fail2ban:latest
+    container_name: fail2ban
+    profiles:
+      - extra
+      - full
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./config/fail2ban:/data
+      - nginx_logs:/var/log/nginx
+      - ../hass-stack/config/hass_config:/var/log/hass
+      - ./config/fail2ban/logs:/var/log/fail2ban
+      # - fail2ban_socket:/var/run/fail2ban
+    environment:
+      - TZ=${TZ}
+    depends_on:
+      - nginx
+    restart: unless-stopped
+
+  duckdns:
+    container_name: duckdns
+    image: linuxserver/duckdns
+    profiles:
+      - full
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - SUBDOMAINS=${DUCKDNS_SUBDOMAINS}
+      - TOKEN=${DUCKDNS_TOKEN}
+    volumes:
+      - ./config/duckdns:/config
+    restart: unless-stopped
+
+volumes:
+  cert_volume:
+    name: cert_volume
+  acme_challenge:
+    name: acme_challenge
+  # fail2ban_socket:
+  #   name: fail2ban_socket
+    external: true
+  nginx_logs:
+    name: nginx_logs
+
+networks:
+  hass-network:
+    driver: bridge

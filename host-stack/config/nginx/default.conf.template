@@ -2,7 +2,8 @@
 # This config provides SSL termination, security hardening, and proxying to Home Assistant
 
 # Global directives
-access_log /dev/stdout;
+access_log /var/log/nginx/access.log combined;
+access_log /dev/stdout combined;
 error_log /dev/stdout warn;
 server_tokens off;
 
@@ -29,7 +30,7 @@ map $remote_addr $lan_access {
 # Upstream server definition for Home Assistant
 upstream homeassistant {
   zone homeassistant 64k;
-  server <HOMEASSISTANT IP>:8123 resolve;
+  server 192.168.178.28:8123 resolve;
 }
 
 # HTTP server block - redirects to HTTPS
@@ -80,36 +81,6 @@ server {
   # Content-Security-Policy: Prevents XSS by restricting resource loading. Allows self, inline scripts/styles for HA, HTTPS/WebSockets for connectivity, blocks objects/frames.
   add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https: wss:; media-src 'self' data: https:; object-src 'none'; frame-ancestors 'self'; base-uri 'none';" always;
 
-  # Security checks
-  # Block OPTIONS method as it's not needed for Home Assistant
-  if ($request_method = 'OPTIONS') {
-    return 444;
-  }
-
-  # Block TLS handshakes on HTTP port
-  if ($request ~ "^\x16") {
-    return 444;
-  }
-
-  if ($query_string ~* "(proc/self/environ|/etc/passwd|php://|data://|expect://|../../|proc%2fself%2fenviron|%2fetc%2fpasswd|php%3a%2f%2f|data%3a%2f%2f|expect%3a%2f%2f|%2e%2e%2f%2e%2e%2f|%3Cscript%3E|alert%28|checkwaf)") {
-    return 444;
-  }
-
-  # Block dangerous patterns in URI and query string (including URL-encoded versions)
-  location ~* (proc/self/environ|/etc/passwd|php://|data://|expect://|../../|proc%2fself%2fenviron|%2fetc%2fpasswd|php%3a%2f%2f|data%3a%2f%2f|expect%3a%2f%2f|%2e%2e%2f%2e%2e%2f) {
-    return 444;
-  }
-
-  # Block executable file extensions
-  location ~ \.(php|phtml|pl|py|cgi|sh)$ {
-    return 444;
-  }
-
-  # Block common vulnerable and sensitive system paths
-  location ~* /(cgi-bin|cgi|phpmyadmin|admin|wp-admin|wp-content|wp-includes|xmlrpc\.php|readme\.html|license\.txt|\.git|bin\/sh|\.env|wp-config|libredtail) {
-    return 444;
-  }
-
   # Specific WebSocket Endpoint
   location /api/websocket {
     proxy_pass http://homeassistant/api/websocket;
@@ -146,11 +117,9 @@ server {
 }
 
 # Default HTTPS server - blocks all other domains/requests
+# ssl_reject_handshake silently drops TLS connections for unknown hostnames
+# without requiring a certificate file (nginx >= 1.19.4)
 server {
   listen 443 ssl default_server;
-  ssl_certificate     /etc/nginx/templates/cert.pem;
-  ssl_certificate_key /etc/nginx/templates/privkey.pem;
-  ssl_protocols       TLSv1.2 TLSv1.3;
-  ssl_ciphers         HIGH:!aNULL:!MD5;
-  return 444;
+  ssl_reject_handshake on;
 }

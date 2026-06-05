@@ -2,7 +2,7 @@
 
 # Validate the first argument: must be "up" or "down" to proceed
 if { [ "$1" != "up" ] && [ "$1" != "down" ]; }; then
-	echo "Usage: ./$0 up|down [sys|tool|hass|all] [basic|extra|full]"
+	echo "Usage: ./$0 up|down [sys|tool|hass|host|all] [basic|extra|full]"
 	exit 1
 fi
 
@@ -20,24 +20,24 @@ profileStr=""
 
 # Handle arguments
 if [ $# -ge 2 ]; then
-	if [ "$2" = "all" ] || [ "$2" = "sys" ] || [ "$2" = "tool" ] || [ "$2" = "hass" ]; then
+	if [ "$2" = "all" ] || [ "$2" = "sys" ] || [ "$2" = "tool" ] || [ "$2" = "hass" ] || [ "$2" = "host" ]; then
 		stack="$2"
 		if [ $# -eq 3 ]; then
 			if [ "$3" = "basic" ] || [ "$3" = "extra" ] || [ "$3" = "full" ]; then
 				profile="$3"
 			else
-				echo "Usage: ./$0 $1 [all|sys|tool|hass] [basic|extra|full]"
+				echo "Usage: ./$0 $1 [all|sys|tool|hass|host] [basic|extra|full]"
 				exit 1
 			fi
 		fi
 	elif [ "$2" = "basic" ] || [ "$2" = "extra" ] || [ "$2" = "full" ]; then
 		profile="$2"
 		if [ $# -gt 2 ]; then
-			echo "Usage: ./$0 $1 [sys|tool|hass|full] [basic|extra|full]"
+			echo "Usage: ./$0 $1 [sys|tool|hass|host|all] [basic|extra|full]"
 			exit 1
 		fi
 	else
-		echo "Usage: ./$0 $1 [all|sys|tool|hass] [basic|extra|full]"
+		echo "Usage: ./$0 $1 [all|sys|tool|hass|host] [basic|extra|full]"
 		exit 1
 	fi
 fi
@@ -57,6 +57,7 @@ profileStr="--profile ${profile}"
 if [ "${stack}" = "all" ]; then
 	if [ "${opStr}" = "down" ]; then
 		# Run docker compose for all stacks in sequence (hass, tool, sys)
+		docker compose -f host-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
 		docker compose -f hass-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
 		docker compose -f tool-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
 		docker compose -f sys-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
@@ -64,6 +65,7 @@ if [ "${stack}" = "all" ]; then
 		docker compose -f sys-stack/docker-compose.yml --env-file .env basic ${opStr}
 		docker compose -f tool-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
 		docker compose -f hass-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
+		docker compose -f host-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
 		docker compose -f sys-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
 	fi
 else

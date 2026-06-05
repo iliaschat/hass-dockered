@@ -4,6 +4,7 @@ services:
     image: portainer/portainer-ce:lts
     profiles:
       - basic
+      - extra
       - full
     restart: always
     volumes:
@@ -12,86 +13,6 @@ services:
     ports:
       - 9443:9443
       # - 8000:8000  # Uncomment if you intend to use Edge Agents
-
-  certbot-init:
-    container_name: certbot-init
-    image: certbot/certbot
-    profiles:
-      - basic
-      - extra
-      - full
-    entrypoint: /bin/sh
-    command: -c 'test -d /etc/letsencrypt/live/${DUCKDNS_DOMAIN} || certbot certonly -v --standalone -v -d ${DUCKDNS_DOMAIN} -m ${DOMAIN_EMAIL} --force-renewal --agree-tos'
-    ports:
-      - 80:80
-    volumes:
-      # - ./config/letsencrypt:/etc/letsencrypt
-      - cert_volume:/etc/letsencrypt
-
-  nginx:
-    image: nginx
-    container_name: nginx
-    profiles:
-      - basic
-      - extra
-      - full
-    entrypoint: /bin/sh
-    command: -c 'while :; do sleep 6h && wait $${!}; nginx -s reload; done & /docker-entrypoint.sh nginx -g "daemon off;error_log /dev/stdout debug;"'
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./config/nginx:/etc/nginx/templates # to configure nginx
-      - ./config/nginx/static:/var/www/html # provide static web site
-      # - ./config/letsencrypt:/etc/letsencrypt
-      # - ./config/acme_challenge:/usr/share/nginx/html/.well-known
-      - cert_volume:/etc/letsencrypt
-      - acme_challenge:/usr/share/nginx/html/.well-known
-    environment:
-      DOMAIN: ${DUCKDNS_DOMAIN}
-    depends_on:
-      certbot-init:
-        condition: service_completed_successfully
-        required: true
-    networks:
-      - default
-      - hass-network
-
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    profiles:
-      - basic
-      - extra
-      - full
-    entrypoint: /bin/sh
-    command: -c 'trap exit TERM; while :; do certbot renew; sleep 24h && wait $${!}; done;'
-    depends_on:
-      nginx:
-        condition: service_started
-        required: true
-    volumes:
-      # - ./config/letsencrypt:/etc/letsencrypt
-      # - ./config/acme_challenge:/usr/share/nginx/html/.well-known
-      - cert_volume:/etc/letsencrypt
-      - acme_challenge:/usr/share/nginx/html/.well-known
-
-  # duckdns:
-  #   container_name: duckdns
-  #   image: linuxserver/duckdns
-  #   profiles:
-  #     - basic
-  #     - extra
-  #     - full
-  #   environment:
-  #     - PUID=${PUID}
-  #     - PGID=${PGID}
-  #     - TZ=${TZ}
-  #     - SUBDOMAINS=${DUCKDNS_SUBDOMAINS}
-  #     - TOKEN=${DUCKDNS_TOKEN}
-  #   volumes:
-  #     - ./config/duckdns:/config
-  #   restart: unless-stopped
 
   openvpn-as:
     container_name: openvpn-as
@@ -115,13 +36,7 @@ services:
 volumes:
   portainer_data:
     name: portainer_data
-  cert_volume:
-    name: cert_volume
-  acme_challenge:
-    name: acme_challenge
 
 networks:
   default:
     name: portainer_network
-  hass-network:
-    driver: bridge
