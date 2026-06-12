@@ -1,7 +1,7 @@
 services:
 
   deconz:
-    image: deconzcommunity/deconz:stable
+    image: deconzcommunity/deconz:latest
     container_name: deconz
     profiles:
       - extra
@@ -78,4 +78,5 @@ services:
 
 networks:
   hass-network:
+    name: hass-network
     driver: bridge

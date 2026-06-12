@@ -68,6 +68,7 @@ services:
 
 networks:
   hass-network:
+    name: hass-network
     driver: bridge
 
 # volumes:

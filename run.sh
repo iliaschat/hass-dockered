@@ -56,13 +56,14 @@ profileStr="--profile ${profile}"
 # Execute commands
 if [ "${stack}" = "all" ]; then
 	if [ "${opStr}" = "down" ]; then
-		# Run docker compose for all stacks in sequence (hass, tool, sys)
+		# Run docker compose for all stacks in sequence (host, hass, tool, sys) to ensure proper shutdown order
 		docker compose -f host-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
 		docker compose -f hass-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
 		docker compose -f tool-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
 		docker compose -f sys-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
 	else
-		docker compose -f sys-stack/docker-compose.yml --env-file .env basic ${opStr}
+		# Run docker compose for all stacks in sequence (sys, tool, hass, host) to ensure proper startup order
+		docker compose -f sys-stack/docker-compose.yml --env-file .env --profile basic ${opStr}
 		docker compose -f tool-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
 		docker compose -f hass-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}
 		docker compose -f host-stack/docker-compose.yml --env-file .env ${profileStr} ${opStr}

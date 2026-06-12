@@ -13,6 +13,8 @@ services:
     ports:
       - 9443:9443
       # - 8000:8000  # Uncomment if you intend to use Edge Agents
+    networks:
+      - portainer_network
 
   openvpn-as:
     container_name: openvpn-as
@@ -32,6 +34,9 @@ services:
       - 943:943
       - 4443:443
       - 1194:1194/udp
+    networks:
+      - portainer_network
+      - hass-network
 
 volumes:
   portainer_data:
@@ -40,3 +45,6 @@ volumes:
 networks:
   default:
     name: portainer_network
+  hass-network:
+    name: hass-network
+    driver: bridge
