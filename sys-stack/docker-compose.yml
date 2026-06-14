@@ -4,6 +4,7 @@ services:
     image: portainer/portainer-ce:lts
     profiles:
       - basic
+      - extra
       - full
     restart: always
     volumes:
@@ -12,6 +13,8 @@ services:
     ports:
       - 9443:9443
       # - 8000:8000  # Uncomment if you intend to use Edge Agents
+    networks:
+      - portainer_network
 
   certbot-init:
     container_name: certbot-init
@@ -54,7 +57,7 @@ services:
         condition: service_completed_successfully
         required: true
     networks:
-      - default
+      - portainer_network
       - hass-network
 
   certbot:
@@ -121,7 +124,7 @@ volumes:
     name: acme_challenge
 
 networks:
-  default:
+  portainer_network:
     name: portainer_network
   hass-network:
     driver: bridge

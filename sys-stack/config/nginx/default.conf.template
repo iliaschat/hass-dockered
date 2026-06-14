@@ -1,7 +1,9 @@
 # Nginx configuration template for Home Assistant reverse proxy
 # This config provides SSL termination, security hardening, and proxying to Home Assistant
 
-access_log /dev/stdout;
+# access_log is already set in the default nginx.conf included by the Docker image.
+# Defining it here again would cause duplicate log entries in docker logs.
+# access_log /dev/stdout;
 error_log /dev/stdout warn;
 
 # DNS resolver for dynamic upstream resolution
@@ -60,6 +62,9 @@ server {
   # SSL Configuration
   ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/cert.pem;
   ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+  ssl_protocols TLSv1.2 TLSv1.3;
+  ssl_ciphers HIGH:!aNULL:!MD5;
+  ssl_prefer_server_ciphers on;
 
   # Security headers
   add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
@@ -79,6 +84,13 @@ server {
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection $connection_upgrade;
+
+    # Keep WebSocket connections alive. The default proxy_read_timeout is 60s,
+    # which causes nginx to drop idle WebSocket connections and forces the HA app
+    # to reconnect repeatedly — each reconnect triggers a new auth attempt and
+    # can eventually cause HA to ban the client IP.
+    proxy_read_timeout 86400s;
+    proxy_send_timeout 86400s;
   }
 
   # General Proxy Settings
