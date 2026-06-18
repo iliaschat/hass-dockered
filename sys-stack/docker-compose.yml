@@ -4,7 +4,6 @@ services:
     image: portainer/portainer-ce:lts
     profiles:
       - basic
-      - extra
       - full
     restart: always
     volumes:
@@ -13,8 +12,6 @@ services:
     ports:
       - 9443:9443
       # - 8000:8000  # Uncomment if you intend to use Edge Agents
-    networks:
-      - portainer_network
 
   certbot-init:
     container_name: certbot-init
@@ -28,7 +25,6 @@ services:
     ports:
       - 80:80
     volumes:
-      # - ./config/letsencrypt:/etc/letsencrypt
       - cert_volume:/etc/letsencrypt
 
   nginx:
@@ -46,8 +42,6 @@ services:
     volumes:
       - ./config/nginx:/etc/nginx/templates # to configure nginx
       - ./config/nginx/static:/var/www/html # provide static web site
-      # - ./config/letsencrypt:/etc/letsencrypt
-      # - ./config/acme_challenge:/usr/share/nginx/html/.well-known
       - cert_volume:/etc/letsencrypt
       - acme_challenge:/usr/share/nginx/html/.well-known
     environment:
@@ -57,7 +51,7 @@ services:
         condition: service_completed_successfully
         required: true
     networks:
-      - portainer_network
+      - default
       - hass-network
 
   certbot:
@@ -68,14 +62,12 @@ services:
       - extra
       - full
     entrypoint: /bin/sh
-    command: -c 'trap exit TERM; while :; do certbot renew; sleep 24h && wait $${!}; done;'
+    command: -c 'trap exit TERM; while :; do certbot renew --webroot -w /usr/share/nginx/html; sleep 24h && wait $${!}; done;'
     depends_on:
       nginx:
         condition: service_started
         required: true
     volumes:
-      # - ./config/letsencrypt:/etc/letsencrypt
-      # - ./config/acme_challenge:/usr/share/nginx/html/.well-known
       - cert_volume:/etc/letsencrypt
       - acme_challenge:/usr/share/nginx/html/.well-known
 
@@ -124,7 +116,7 @@ volumes:
     name: acme_challenge
 
 networks:
-  portainer_network:
+  default:
     name: portainer_network
   hass-network:
     driver: bridge
