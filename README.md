@@ -88,26 +88,11 @@ MYSQL_USER=homeassistant
 MYSQL_PASSWORD=your_password
 ```
 
-## SSL Certificate Setup (Optional)
+## SSL Certificate Setup
 
-If you prefer to use self-signed certificates instead of Let's Encrypt (via Certbot), you can generate RSA PEM files using OpenSSL.
+SSL certificates are managed automatically by the `certbot-init` and `certbot` services in sys-stack. On first start, `certbot-init` issues a Let's Encrypt certificate for your domain and writes `fullchain.pem` and `privkey.pem` into the `cert_volume` named volume at `/etc/letsencrypt/live/${DUCKDNS_DOMAIN}/`. The `certbot` service then renews the certificate every 24 hours. Nginx reads the certificates from the same volume, so no manual file placement is needed.
 
-### Generate RSA Private Key and Self-Signed Certificate
-
-```bash
-openssl req -newkey rsa:2048 -nodes -keyout privkey.pem -x509 -days 365 -out cert.pem
-```
-
-- `-newkey rsa:2048`: Generate a new 2048-bit RSA key.
-- `-nodes`: Do not encrypt the private key (no passphrase).
-- `-keyout privkey.pem`: Save the private key to `privkey.pem`.
-- `-x509`: Create a self-signed certificate.
-- `-days 365`: Certificate valid for 365 days.
-- `-out cert.pem`: Save the certificate to `cert.pem`.
-
-You’ll be prompted to enter details like Country, Organization, and Common Name (domain).
-
-Place the generated `cert.pem` and `privkey.pem` files in the appropriate directory (e.g., `./sys-stack/config/nginx/`) and update the Nginx configuration accordingly.
+> **Self-signed certificates (advanced):** If you cannot use Let's Encrypt (e.g. no public DNS), generate a self-signed certificate with OpenSSL and place `fullchain.pem` and `privkey.pem` at `/etc/letsencrypt/live/<your-domain>/` inside `cert_volume`. Remove or disable the `certbot-init` and `certbot` services so they do not overwrite your files.
 
 ## Usage
 

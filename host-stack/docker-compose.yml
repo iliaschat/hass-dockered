@@ -8,7 +8,7 @@ services:
       - extra
       - full
     entrypoint: /bin/sh
-    command: -c 'test -d /etc/letsencrypt/live/${DUCKDNS_DOMAIN} || certbot certonly -v --standalone -d ${DUCKDNS_DOMAIN} -m ${DOMAIN_EMAIL} --force-renewal --agree-tos'
+    command: -c 'test -d /etc/letsencrypt/live/${DUCKDNS_DOMAIN} || certbot certonly -v --standalone -v -d ${DUCKDNS_DOMAIN} -m ${DOMAIN_EMAIL} --force-renewal --agree-tos'
     ports:
       - 80:80
     volumes:
@@ -31,7 +31,6 @@ services:
       - ./config/nginx/static:/var/www/html # provide static web site
       - cert_volume:/etc/letsencrypt
       - acme_challenge:/usr/share/nginx/html/.well-known
-      - nginx_logs:/var/log/nginx
     environment:
       DOMAIN: ${DUCKDNS_DOMAIN}
     depends_on:
@@ -41,7 +40,6 @@ services:
     networks:
       - default
       - hass-network
-    restart: unless-stopped
 
   certbot:
     image: certbot/certbot
@@ -59,7 +57,23 @@ services:
     volumes:
       - cert_volume:/etc/letsencrypt
       - acme_challenge:/usr/share/nginx/html/.well-known
-    restart: unless-stopped
+
+  # duckdns:
+  #   container_name: duckdns
+  #   image: linuxserver/duckdns
+  #   profiles:
+  #     - basic
+  #     - extra
+  #     - full
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TZ}
+  #     - SUBDOMAINS=${DUCKDNS_SUBDOMAINS}
+  #     - TOKEN=${DUCKDNS_TOKEN}
+  #   volumes:
+  #     - ./config/duckdns:/config
+  #   restart: unless-stopped
 
   fail2ban:
     image: crazymax/fail2ban:latest
@@ -80,21 +94,6 @@ services:
       - TZ=${TZ}
     depends_on:
       - nginx
-    restart: unless-stopped
-
-  duckdns:
-    container_name: duckdns
-    image: linuxserver/duckdns
-    profiles:
-      - full
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - SUBDOMAINS=${DUCKDNS_SUBDOMAINS}
-      - TOKEN=${DUCKDNS_TOKEN}
-    volumes:
-      - ./config/duckdns:/config
     restart: unless-stopped
 
 volumes:

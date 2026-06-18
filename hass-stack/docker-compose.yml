@@ -40,7 +40,6 @@ services:
     volumes:
       - /run/dbus:/run/dbus:ro
       - ./config/hass_config:/config
-      - ../sys-stack/config/letsencrypt:/etc/letsencrypt:ro
       - ../host-stack/config/fail2ban/logs:/var/log/fail2ban:ro
       # - fail2ban_socket:/var/run/fail2ban:ro
     restart: unless-stopped
@@ -51,9 +50,30 @@ services:
     networks:
       - hass-network
 
+  esphome:
+    image: ghcr.io/esphome/esphome:stable
+    container_name: esphome
+    depends_on:
+      - homeassistant
+    profiles:
+      - extra
+      - full
+    environment:
+      - TZ=${TZ}
+      - ESPHOME_DASHBOARD_USE_PING=true
+    volumes:
+      - ./config/hass_config/esphome:/config
+    restart: unless-stopped
+    networks:
+      - hass-network
+    ports:
+      - 6052:6052
+
   core-configurator:
     image: causticlab/hass-configurator-docker:arm
     container_name: core-configurator
+    depends_on:
+      - homeassistant
     #user: ${PUID}:${PGID}
     profiles:
       - full
