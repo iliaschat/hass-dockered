@@ -40,6 +40,7 @@ services:
     networks:
       - default
       - hass-network
+    restart: unless-stopped
 
   certbot:
     image: certbot/certbot
@@ -57,6 +58,7 @@ services:
     volumes:
       - cert_volume:/etc/letsencrypt
       - acme_challenge:/usr/share/nginx/html/.well-known
+    restart: unless-stopped
 
   # duckdns:
   #   container_name: duckdns
