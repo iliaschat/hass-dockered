@@ -1,7 +1,7 @@
 services:
 
   deconz:
-    image: deconzcommunity/deconz:stable
+    image: deconzcommunity/deconz:latest
     container_name: deconz
     profiles:
       - extra
@@ -12,11 +12,13 @@ services:
       - TZ=${TZ}
       - DECONZ_WEB_PORT=8080
       - DECONZ_WS_PORT=8443
-      - DEBUG_INFO=1
+      - DEBUG_INFO=0
       - DEBUG_APS=0
       - DEBUG_ZCL=0
       - DEBUG_ZDP=0
-      - DEBUG_OTAU=0
+      - DEBUG_OTAU=1
+#      - DECONZ_VNC_MODE=1
+#      - DECONZ_VNC_PASSWORD=12345aa
     volumes:
       - ./config/deconz:/opt/deCONZ
     restart: unless-stopped
@@ -25,8 +27,9 @@ services:
     networks:
       - hass-network
     ports:
-      - 8080:80
-      - 8443:443
+      - 8080:8080
+      - 8443:8443
+#      - 5900:5900
 
   mosquitto:
     image: eclipse-mosquitto

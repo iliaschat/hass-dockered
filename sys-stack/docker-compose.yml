@@ -3,6 +3,7 @@ services:
     container_name: portainer
     image: portainer/portainer-ce:lts
     profiles:
+      - port
       - basic
       - full
     restart: always
@@ -11,7 +12,31 @@ services:
       - portainer_data:/data
     ports:
       - 9443:9443
-      # - 8000:8000  # Uncomment if you intend to use Edge Agents
+      - 8000:8000  # Uncomment if you intend to use Edge Agents
+    networks:
+      - default
+
+  watchtower:
+    image: nickfedor/watchtower
+    container_name: watchtower
+    profiles:
+      - extra
+      - full
+#    restart: unless-stopped
+    restart: "no"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TZ=Europe/Amsterdam
+      - WATCHTOWER_CLEANUP=true
+#      - WATCHTOWER_SCHEDULE=0 0 4 * * *
+#      - WATCHTOWER_POLL_INTERVAL=3600
+      - WATCHTOWER_RUN_ONCE=true
+    # List the specific containers to update below
+    command:
+      - homeassistant
+    networks:
+      - default
 
   certbot-init:
     container_name: certbot-init
@@ -25,6 +50,7 @@ services:
     ports:
       - 80:80
     volumes:
+      # - ./config/letsencrypt:/etc/letsencrypt
       - cert_volume:/etc/letsencrypt
 
   nginx:
@@ -42,6 +68,8 @@ services:
     volumes:
       - ./config/nginx:/etc/nginx/templates # to configure nginx
       - ./config/nginx/static:/var/www/html # provide static web site
+      # - ./config/letsencrypt:/etc/letsencrypt
+      # - ./config/acme_challenge:/usr/share/nginx/html/.well-known
       - cert_volume:/etc/letsencrypt
       - acme_challenge:/usr/share/nginx/html/.well-known
     environment:
@@ -51,7 +79,6 @@ services:
         condition: service_completed_successfully
         required: true
     networks:
-      - default
       - hass-network
     restart: unless-stopped
 
@@ -69,6 +96,8 @@ services:
         condition: service_started
         required: true
     volumes:
+      # - ./config/letsencrypt:/etc/letsencrypt
+      # - ./config/acme_challenge:/usr/share/nginx/html/.well-known
       - cert_volume:/etc/letsencrypt
       - acme_challenge:/usr/share/nginx/html/.well-known
     restart: unless-stopped
@@ -108,6 +137,7 @@ services:
       - 943:943
       - 4443:443
       - 1194:1194/udp
+    network_mode: host
 
 volumes:
   portainer_data:

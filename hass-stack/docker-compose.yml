@@ -1,9 +1,7 @@
 services:
   core-mariadb:
-    image: mariadb
+    image: mariadb:lts
     container_name: core-mariadb
-    post_start:
-      - command: [sh, -c, /docker-entrypoint-initdb.d/init.sh]
     profiles:
       - extra
       - full
@@ -16,7 +14,8 @@ services:
     volumes:
       - ./config/mariadb/backup:/backup
       - ./config/mariadb/conf:/var/lib/mysql
-      - ./config/mariadb-init:/docker-entrypoint-initdb.d
+      # If there is not scheme, restore the last created backup (if exists)
+      - ./config/mariadb/backup/latest.${MYSQL_DATABASE}.sql.gz:/docker-entrypoint-initdb.d/database.sql.gz
     restart: unless-stopped
     # network_mode: host
     # Uncomment below to use bridge networking instead of host
@@ -24,6 +23,30 @@ services:
       - hass-network
     ports:
       - 3306:3306
+
+  mysql-cron-backup:
+    image: fradelg/mysql-cron-backup
+    container_name: mysql-cron-backup
+    depends_on:
+      - core-mariadb
+    profiles:
+      - extra
+      - full
+    volumes:
+      - ./config/mariadb/backup:/backup
+    environment:
+      - TZ=${TZ}
+      - MYSQL_HOST=192.168.178.28
+      - MYSQL_PORT=3306
+      - MYSQL_USER=root
+      - MYSQL_PASS=${MYSQL_ROOT_PASSWORD}
+      - MAX_BACKUPS=15
+      - INIT_BACKUP=0
+      # Every day at 22:00
+      - CRON_TIME=0 22 * * *
+      # Make it small
+      - GZIP_LEVEL=9
+    restart: unless-stopped
 
   homeassistant:
     container_name: homeassistant
@@ -40,6 +63,8 @@ services:
     volumes:
       - /run/dbus:/run/dbus:ro
       - ./config/hass_config:/config
+#      - ../sys-stack/config/letsencrypt:/etc/letsencrypt:ro
+      - cert_volume:/etc/letsencrypt:ro
     restart: unless-stopped
     # network_mode: host
     # Uncomment below to use bridge networking instead of host
@@ -68,6 +93,7 @@ services:
       - hass-network
     ports:
       - 6052:6052
+      - 6053:6053
 
   core-configurator:
     image: causticlab/hass-configurator-docker:arm
@@ -85,6 +111,10 @@ services:
       - hass-network
     ports:
       - 3218:3218/tcp
+
+volumes:
+  cert_volume:
+    name: cert_volume
 
 networks:
   hass-network:
