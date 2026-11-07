@@ -59,6 +59,8 @@ services:
     environment:
       - TZ=${TZ}
       - ESPHOME_DASHBOARD_USE_PING=true
+      - ESPHOME_USERNAME=${ESPHOME_USERNAME}
+      - ESPHOME_PASSWORD=${ESPHOME_PASSWORD}
     volumes:
       - ./config/hass_config/esphome:/config
     restart: unless-stopped
